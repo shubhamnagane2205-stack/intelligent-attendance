@@ -1,0 +1,3 @@
+[server]
+fileWatcherType = "poll"
+folderWatchList = ["C:\\Intelligent Attendence\\src"]
