@@ -58,3 +58,45 @@ def get_students_with_emb(emb_type='F'):
                 student_ids.append(student.get('student_id'))    
 
         return np.array(voice_embeddings,dtype=np.float32),np.array(student_ids)
+
+
+def check_subject_exists(subject_name,subject_code,class_,division,teacher_id):
+
+    response=supabase.table("subjects").select("subject_id").eq("subject_name",subject_name).eq("subject_code",subject_code).eq("class",class_).eq("division",division).eq("teacher_id",teacher_id).execute()
+    return(bool(response.data))
+
+def create_subject(subject_name,subject_code,class_,division,teacher_id):
+    response=supabase.table('subjects').insert({'subject_name':subject_name,'subject_code':subject_code,'class':class_,"division":division,'teacher_id':teacher_id}).execute()
+    return(bool(response.data))
+
+def get_teacher_subjects(teacher_id):
+    response=supabase.table("subjects").select("*,student_subjects(count),attendance_logs(timestamp)").eq("teacher_id",teacher_id).execute()
+    subjects=response.data
+    for sub in subjects:
+        student_count=sub.get('student_subjects') or [{}]
+        sub["total_students"]=student_count[0].get('count',0)
+        unique_sessions=sub.get('attendance_logs') or []
+        unique_sessions=len(set(log for log in unique_sessions))
+        sub['total_classes']=unique_sessions
+
+        sub.pop('student_subjects',None)
+        sub.pop('attendance_logs',None)
+    return subjects
+
+
+def enroll_student_to_subject(subject_id,student_id):
+    data={"subject_id":subject_id,"student_id":student_id}
+    response=supabase.table('student_subjects').insert(data).execute()
+    return bool(response.data)
+
+def unenroll_student_from_subject(subject_id,student_id):
+    response=supabase.table('student_subjects').delete().eq("student_id",student_id).eq("subject_id",subject_id).select().execute()
+    return bool(response.data)
+
+def get_student_subjects(student_id):
+    response=supabase.table("student_subjects").select("*",'subjects(*)').eq('student_id',student_id).execute()
+    return response.data
+
+def get_student_attendance(student_id):
+    response=supabase.table('attendance_logs').select('*','subjects(*)').eq('student_id',student_id).execute()
+    return response.data

@@ -8,14 +8,88 @@ from src.pipelines.face_pipeline import predict_attendance_face,get_face_embeddi
 from src.pipelines.voice_pipeline import voice_encoder
 from src.database.db import get_all_students,create_student
 import time
+from src.components.enroll_dialog import enroll_dialog
+from src.database.db import get_student_attendance,get_student_subjects
+from src.components.subject_card import subject_card,unenroll_student_button
 
 
 def student_dashboard():
-    st.header('Student Dashboard')
+    
+    student_data=st.session_state.student_data
+    
+    col1,col2=st.columns(2,gap="xxlarge",vertical_alignment='center')
+    with col1:
+        dashboard_header()
+    
+    with col2:
+        st.subheader(f"Welcome back {student_data['name']}")
+        
+        
+        if st.button('Logout',shortcut="control+backspace"):
+            st.session_state.is_logged_in=False
+            del st.session_state.student_data
+            st.rerun()
+    st.space()
+
+    col1,col2=st.columns(2)
+
+    with col1:
+        st.header("Your Enrolled Subjects")
+
+    with col2:
+        if st.button("Enroll in a Subject",type='primary',width='stretch'):
+         enroll_dialog()
+
+    with st.spinner("Loading Your Subjects....."):
+        student_id=student_data['student_id']
+        subjects=get_student_subjects(student_id)
+        logs=get_student_attendance(student_id)
+
+        stats_map={}
+
+        for log in logs:
+            subject_id=log['subject_id']
+
+            if subject_id not in stats_map:
+                stats_map[subject_id]={'total':0,'attended':0}
+
+            stats_map[subject_id]['total']+=1
+            if log.get("is_present"):
+                stats_map[subject_id]['attended']+=1
+
+        col=st.columns(2)
+
+        for i,subject_node in enumerate(subjects):
+            subject=subject_node.get("subjects")
+            subject_id=subject.get('subject_id')
+
+            stats=stats_map.get(subject_id,{'total':0,"attended":0})
+            attendance = (
+                f"{(stats['attended'] / stats['total']) * 100:.1f}%"
+                if stats['total'] > 0
+                else "N/A"
+            )
+            with col[i%2]:
+                subject_card(subject_name=subject['subject_name'],subject_code=subject['subject_code'],
+                subject_id=subject['subject_id'],division=subject['division'] ,footer_callback=unenroll_student_button,
+
+                stats = [
+                        ('📅', 'Total', stats['total']),
+                        ('✅', 'Attended', stats['attended']),
+                        ('📊', 'Attendance Rate', attendance)
+                    ],           
+                    user_id=student_id
+                )
+
+            
+
+
     
     
 
 def student_screen():
+    style_background_dashboard()
+    base_layout()
 
     if 'student_data' in st.session_state:
         student_dashboard()
@@ -30,6 +104,7 @@ def student_screen():
     with col2:
         if st.button("Go back to home",shortcut="control+backspace"):
             st.session_state.login_type=None
+            st.query_params.clear()
             st.rerun()
 
     st.header("Login using FaceId",text_alignment='center')
@@ -80,7 +155,7 @@ def student_screen():
 
             audio_bytes=None
             try:
-                audio_bytes=st.audio_input("Record a short phrase like I am present, My name is Bhushan")
+                audio_bytes=st.audio_input("Record a short phrase like My Name is Varad, I am present")
             except Exception:
                 st.error("Unable to access your microphone. Try again")
 
