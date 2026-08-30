@@ -128,7 +128,12 @@ def student_screen():
                 else:
                     if detected_student:
                         student_id=list(detected_student.keys())[0]
-                        all_students=get_all_students()
+                        try:
+                            all_students=get_all_students()
+                        except Exception:
+                            st.toast("Unable to fetch students. Please try again.")
+                            all_students=[]
+
                         student=next((student for student in all_students if student['student_id']==student_id))
 
                     
@@ -155,7 +160,8 @@ def student_screen():
 
             audio_bytes=None
             try:
-                audio_bytes=st.audio_input("Record a short phrase like My Name is Varad, I am present")
+                audio_bytes=st.audio_input("Say a short phrase like: “My name is Varad, and I am present.” ")
+
             except Exception:
                 st.error("Unable to access your microphone. Try again")
 

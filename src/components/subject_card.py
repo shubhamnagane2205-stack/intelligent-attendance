@@ -9,10 +9,14 @@ def share_button(subject_name,subject_id,subject_code,user_id=None):
 
 def unenroll_student_button(subject_name,subject_id,subject_code,user_id=None):
     if st.button(f"Unenroll from {subject_name}", type='tertiary', width='stretch', icon=':material/delete_forever:',key=f"Share_"+str(subject_id)):
-        unenroll_student_from_subject(subject_id,user_id)
-        st.toast(f"Unenrolled from {subject_name} successfully!")
-        time.sleep(1)
-        st.rerun()
+        try:
+
+            unenroll_student_from_subject(subject_id,user_id)
+            st.toast(f"Unenrolled from {subject_name} successfully!")
+            time.sleep(1)
+            st.rerun()
+        except Exception as e:
+            st.error("Unexpected Error!")
 
 
 

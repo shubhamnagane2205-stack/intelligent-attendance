@@ -36,11 +36,16 @@ def create_student(name,face_embedding,voice_embedding=None):
 
 @st.cache_data
 def get_all_students():
+    
     return supabase.table('students').select('*').execute().data
-
-
+    
+    
 def get_students_with_emb(emb_type='F'):
-    students=get_all_students()
+    try:
+        students=get_all_students()
+    except Exception:
+        students=[]
+        st.toast("Unable to fetch students. Please try again.")
     face_embeddings=[]
     voice_embeddings=[]
     student_ids=[]
@@ -76,7 +81,7 @@ def get_teacher_subjects(teacher_id):
         student_count=sub.get('student_subjects') or [{}]
         sub["total_students"]=student_count[0].get('count',0)
         unique_sessions=sub.get('attendance_logs') or []
-        unique_sessions=len(set(log for log in unique_sessions))
+        unique_sessions=len(set(log['timestamp'] for log in unique_sessions))
         sub['total_classes']=unique_sessions
 
         sub.pop('student_subjects',None)
@@ -99,4 +104,12 @@ def get_student_subjects(student_id):
 
 def get_student_attendance(student_id):
     response=supabase.table('attendance_logs').select('*','subjects(*)').eq('student_id',student_id).execute()
+    return response.data
+
+def create_attendance(logs):
+    response = supabase.table('attendance_logs').insert(logs).execute()
+    return response.data
+
+def get_attendance_records(selected_subject_id):
+    response=supabase.table('attendance_logs').select('*,students(*)').eq('subject_id',selected_subject_id).execute()
     return response.data
