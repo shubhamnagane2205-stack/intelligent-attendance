@@ -324,7 +324,7 @@ def teacher_login_screen():
         if st.button("Login",width='stretch',shortcut='control+enter',icon=':material/passkey:'):
             success,message=teacher_login(username,password)
             if success:
-                st.toast(message+f'{st.session_state.teacher_data['teacher_name']}',icon="👋")
+                st.toast(message+f' {st.session_state.teacher_data['teacher_name']}',icon="👋")
                 time.sleep(1)
                 st.rerun()
             else:

@@ -4,7 +4,7 @@ from src.database.db import unenroll_student_from_subject
 import time
 
 def share_button(subject_name,subject_id,subject_code,user_id=None):
-    if st.button(f'Share Code:'+subject_name,key=f"Share_"+str(subject_id),icon=":material/share:"):
+    if st.button(f'Share :'+subject_name,key=f"Share_"+str(subject_id),icon=":material/share:"):
         share_subject_dialog(subject_id)
 
 def unenroll_student_button(subject_name,subject_id,subject_code,user_id=None):
